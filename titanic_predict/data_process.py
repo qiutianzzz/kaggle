@@ -6,22 +6,17 @@ from pandas import Series, DataFrame
 # data_train = data_train.drop(data_train.columns[0], axis=1)
              
 
-# data_train = pd.read_csv("~/machine_l/Database/titanic/test.csv", \
-#                 usecols=["PassengerId","Survived","Pclass","Name","Sex","Age","SibSp", \
-#                   "Parch", "Ticket", "Fare", "Cabin","Embarked"])
-
-
-data_train = np.loadtxt("/home/leon/machine_l/Database/titanic/test.csv", delimiter=';', skiprows=1)
-# usecols=range(1,10), unpack=True)
+data_train = pd.read_csv("~/machine_l/Database/titanic/train.csv", \
+                usecols=["PassengerId","Survived", "Pclass","Name","Sex","Age","SibSp", \
+                  "Parch", "Ticket", "Fare", "Cabin","Embarked"])
 
 import matplotlib.pyplot as plt
 fig = plt.figure()
 fig.set(alpha=0.2)
 
-print(data_train.PassengerId)
 plt.subplot2grid((2,3), (0,0))
 data_train.Survived.value_counts().plot(kind='bar')
-plt.title(u"Survive Account（1 is survived）")
+plt.title(u"Survive quantity")
 plt.ylabel(u"people quantity")
 
 
