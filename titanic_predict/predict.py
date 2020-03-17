@@ -1,4 +1,7 @@
 from sklearn.ensemble import RandomForestRegressor
+import sklearn.preprocessing as preprocessing
+from sklearn import linear_model
+
 import pandas as pd
 import numpy as np
 from pandas import Series, DataFrame
@@ -12,6 +15,7 @@ def set_missing_ages(df):
     
     # 把已有的数值型特征取出来丢进Random Forest Regressor中
     age_df = df[['Age','Fare', 'Parch', 'SibSp', 'Pclass']]
+
 
     # 乘客分成已知年龄和未知年龄两部分
     known_age = age_df[age_df.Age.notnull()].values
@@ -43,3 +47,43 @@ def set_Cabin_type(df):
 data_train, rfr = set_missing_ages(data_train)
 data_train = set_Cabin_type(data_train)
 print(data_train.Cabin)
+
+dummies_Cabin = pd.get_dummies(data_train['Cabin'], prefix='Cabin')
+
+dummies_Embarked = pd.get_dummies(data_train['Embarked'], prefix='Embarked')
+dummies_Sex = pd.get_dummies(data_train['Sex'], prefix='Sex')
+dummies_Pclass = pd.get_dummies(data_train['Pclass'], prefix='Pclass')
+
+df = pd.concat([data_train, dummies_Cabin, dummies_Embarked, dummies_Sex, dummies_Pclass], axis = 1)
+df.drop(['Pclass', 'Name', 'Sex', 'Ticket', 'Cabin', 'Embarked'], axis=1, inplace = True)
+
+fare_scale_param = preprocessing.StandardScaler().fit(df['Age'])
+
+df['Age_scaled'] = fare_scale_param.transform(df['Age'])
+
+# df['Age_scaled'] = scaler.fit_trandform(df['Age'])
+fare_scale_param = scaler.fit(df['Fare'])
+df['Fare_scaled'] = scaler.transform(fare_scale_param)
+
+train_df = df.filter(regex='Survived|Age_.*|SibSp|Parch|Fare_.*|Cabin_.*|Embarked_.*|Sex_.*|Pclass_.*')
+train_np = train_df.as_matrix()
+
+y = train_np[:,0]
+
+X = train_np[:, 1:]
+
+clf = linear_model.LogisticRegression(C=1.0, penalty = 'l1', tol = le-6)
+clf.fit(X, y)
+
+
+
+
+
+
+
+
+
+
+
+
+
