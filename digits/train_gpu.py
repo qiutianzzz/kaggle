@@ -32,9 +32,9 @@ session = tf.Session(config=config)
 # 设置session
 KTF.set_session(session )
 
-train = pd.read_csv("~/machine_l/Database/Digit_Reg/train.csv")
+train = pd.read_csv("~/machine_l/database/Digit_Reg/train.csv")
 
-test = pd.read_csv("~/machine_l/Database/Digit_Reg//test.csv")
+test = pd.read_csv("~/machine_l/database/Digit_Reg//test.csv")
 
 Y_train = train['label']
 

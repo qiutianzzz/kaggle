@@ -21,9 +21,9 @@ from keras.callbacks import ReduceLROnPlateau
 sns.set(style='white', context='notebook', palette='deep')
 os.environ["CUDA_VISIBLE_DEVICES"] = '0'
 
-train = pd.read_csv("~/machine_l/Database/Digit_Reg/train.csv")
+train = pd.read_csv("~/machine_l/database/Digit_Reg/train.csv")
 
-test = pd.read_csv("~/machine_l/Database/Digit_Reg//test.csv")
+test = pd.read_csv("~/machine_l/database/Digit_Reg//test.csv")
 
 Y_train = train['label']
 
