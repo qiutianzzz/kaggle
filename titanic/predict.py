@@ -8,7 +8,7 @@ import pandas as pd
 import numpy as np
 from pandas import Series, DataFrame
 
-data_train = pd.read_csv("~/machine_l/Database/titanic/train.csv", \
+data_train = pd.read_csv("~/machine_l/database/titanic/train.csv", \
                 usecols=["PassengerId","Survived", "Pclass","Name","Sex","Age","SibSp", \
                   "Parch", "Ticket", "Fare", "Cabin","Embarked"])
 
@@ -75,6 +75,7 @@ train_df = df.filter(regex='Survived|Age_.*|SibSp|Parch|Fare_.*|Cabin_.*|Embarke
 print(train_df)
 train_np = train_df.values
 
+print(train_np)
 y = train_np[:,0]
 
 X = train_np[:, 1:]
@@ -85,7 +86,7 @@ print(clf)
 
 
 
-data_test = pd.read_csv("~/machine_l/Database/titanic/test.csv", \
+data_test = pd.read_csv("~/machine_l/database/titanic/test.csv", \
                 usecols=["PassengerId", "Pclass","Name","Sex","Age","SibSp", \
                   "Parch", "Ticket", "Fare", "Cabin","Embarked"])
 data_test.loc[ (data_test.Fare.isnull()), 'Fare' ] = 0
@@ -118,7 +119,7 @@ df_test['Fare_scaled'] = scaler.fit_transform(test_Fare, test_fare_scale_param)
 test = df_test.filter(regex='Age_.*|SibSp|Parch|Fare_.*|Cabin_.*|Embarked_.*|Sex_.*|Pclass_.*')
 predictions = clf.predict(test)
 result = pd.DataFrame({'PassengerId':data_test['PassengerId'].values, 'Survived':predictions.astype(np.int32)})
-result.to_csv("~/machine_l/Database/titanic/logistic_regression_predictions.csv", index=False)
+result.to_csv("~/machine_l/database/titanic/logistic_regression_predictions.csv", index=False)
 
 
 
