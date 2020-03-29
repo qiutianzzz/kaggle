@@ -22,7 +22,9 @@ def set_missing_ages(df):
     # 乘客分成已知年龄和未知年龄两部分
     known_age = age_df[age_df.Age.notnull()].values
     unknown_age = age_df[age_df.Age.isnull()].values
-
+    print('-------------------TEST------------------------')
+    print(known_age)
+    print('-------------------TEST------------------------')
     # y即目标年龄
     y = known_age[:, 0]
 
