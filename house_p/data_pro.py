@@ -3,6 +3,8 @@ import numpy as np
 from pandas import Series, DataFrame
 import matplotlib.pyplot as plt
 from sklearn import linear_model
+from sklearn.datasets import make_regression
+from sklearn.linear_model import ElasticNet
 
 data_train = pd.read_csv("~/machine_l/database/House_Prices/train.csv")
 
@@ -49,7 +51,12 @@ train_np = df.values
 y = train_np[:,0]
 X = train_np[:, 1:]
 
+# X, y = make_regression(n_features=81, random_state=0)
+
 clf = linear_model.LogisticRegression(C=1.0, penalty = 'l2', tol = 1e-6)
+# clf = linear_model.LinearRegression().fit(X, y)
+# clf = ElasticNet(random_state=0)
+
 clf.fit(X, y)
 print(clf)
 
@@ -103,12 +110,16 @@ for i in range(len(train_columns)):
 print (len(test_columns))
 # test_df.reindex(columns=test_columns, fill_value=0)
 
+print (len(test_df.columns))
+# col_name = test_df.columns.tolist()
+# col_name.insert(1,'HouseStyle_2.5Fin')
+# df.reindex(columns=col_name)
 test_df.info()
 # print (df.isnull().sum().sort_values(ascending=False))
 
 predictions = clf.predict(test_df)
 result = pd.DataFrame({'Id':data_test.Id.values, 'Prices':predictions.astype(np.int32)})
-result.to_csv("~/machine_l/database/House_Prices/sale_price_predictions.csv", index=False)
+result.to_csv("~/machine_l/database/House_Prices/sale_price_predictions_log.csv", index=False)
 
 
 
