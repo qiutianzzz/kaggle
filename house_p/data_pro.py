@@ -103,10 +103,6 @@ for i in range(len(train_columns)):
 print (len(test_columns))
 # test_df.reindex(columns=test_columns, fill_value=0)
 
-print (len(test_df.columns))
-# col_name = test_df.columns.tolist()
-# col_name.insert(1,'HouseStyle_2.5Fin')
-# df.reindex(columns=col_name)
 test_df.info()
 # print (df.isnull().sum().sort_values(ascending=False))
 
