@@ -22,21 +22,24 @@ def set_missing_ages(df):
     # 乘客分成已知年龄和未知年龄两部分
     known_age = age_df[age_df.Age.notnull()].values
     unknown_age = age_df[age_df.Age.isnull()].values
-    print('-------------------TEST------------------------')
-    print(known_age)
-    print('-------------------TEST------------------------')
+
     # y即目标年龄
     y = known_age[:, 0]
-
+    print('the data in y:', y)
     # X即特征属性值
     X = known_age[:, 1:]
+    print('the data in X', X)
 
     # fit到RandomForestRegressor之中
     rfr = RandomForestRegressor(random_state=0, n_estimators=2000, n_jobs=-1)
     rfr.fit(X, y)
     
     # 用得到的模型进行未知年龄结果预测
-    predictedAges = rfr.predict(unknown_age[:, 1::])
+    predictedAges = rfr.predict(unknown_age[:, 1:])
+
+    print('-------------------TEST------------------------')
+    print(age_df.Age)
+    print('-------------------TEST------------------------')
     
     # 用得到的预测结果填补原缺失数据
     df.loc[ (df.Age.isnull()), 'Age' ] = predictedAges 
