@@ -53,15 +53,52 @@ def set_missing_ages(df):
 # age_scale_param = scaler.fit(Age_2)
 # df['Age_scaled'] = scaler.fit_transform(Age_2, age_scale_param)
 
+def standardlize_feather(df):
 
-MSSubClass_MAX = max(data_train.MSSubClass) 
-MSSubClass_scale = data_train.MSSubClass / MSSubClass_MAX
-OverallCond_scale = data_train.OverallCond / 10
-OverallQual_scale = data_train.OverallQual / 10
-YearBuilt_scale = data_train.YearBuilt / max(data_train.YearBuilt)
-YearRemodAdd_scale = data_train.YearRemodAdd / max(data_train.YearRemodAdd)
-# MasVnrArea_scale = data_train.MasVnrArea / max(data_train.MasVnrArea)
-YrSold_scale = data_train.YrSold / max(data_train.YrSold)
+
+    scaler = preprocessing.StandardScaler()
+    df_std = df.values.reshape(-1,1)
+    # age_scale_param = scaler.fit(Age_2)
+    df_scaled = scaler.fit_transform(df_std)
+    return df_scaled
+
+def set_missing_values(df):
+    
+    # 把已有的数值型特征取出来丢进Random Forest Regressor中
+    pd.concat([df, MSSubClass_scale, OverallCond_scale, OverallQual_scale, YearBuilt_scale, \
+    YearRemodAdd_scale, YrSold_scale, dummies_MSZoning, dummies_LotConfig,\
+    dummies_LandSlope, dummies_BldgType, dummies_HouseStyle, dummies_RoofStyle,\
+    dummies_RoofMatl, dummies_Foundation, dummies_Heating, dummies_GarageQual, \
+    dummies_PoolQC, dummies_SaleType, dummies_SaleCondition], axis = 1)
+
+
+    # 乘客分成已知年龄和未知年龄两部分
+    known_df = df[df[0].notnull()].values
+    unknown_df = df[df[0].isnull()].values
+    
+    # y即目标年龄
+    y = known_df[:, 0]
+    print('the data in y:', y)
+    # X即特征属性值
+    X = known_df[:, 1:]
+    print('the data in X', X)
+
+    # fit到RandomForestRegressor之中
+    rfr = RandomForestRegressor(random_state=0, n_estimators=2000, n_jobs=-1)
+    rfr.fit(X, y)
+    
+    # 用得到的模型进行未知年龄结果预测
+    predictedValues = rfr.predict(unknown_df[:, 1:])
+    df.loc[ (df[0].isnull()), df[0] ] = predictedValues 
+    return df, rfr
+
+MSSubClass_scale = standardlize_feather()
+# MSSubClass_scale = data_train.MSSubClass / max(data_train.MSSubClass)
+# OverallCond_scale = data_train.OverallCond / 10
+# OverallQual_scale = data_train.OverallQual / 10
+# YearBuilt_scale = data_train.YearBuilt / max(data_train.YearBuilt)
+# YearRemodAdd_scale = data_train.YearRemodAdd / max(data_train.YearRemodAdd)
+# YrSold_scale = data_train.YrSold / max(data_train.YrSold)
 
 
 dummies_MSZoning = pd.get_dummies(data_train['MSZoning'], prefix='MSZoning')
