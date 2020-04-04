@@ -37,10 +37,7 @@ def set_missing_ages(df):
     # 用得到的模型进行未知年龄结果预测
     predictedAges = rfr.predict(unknown_age[:, 1:])
 
-    print('-------------------TEST------------------------')
-    print(age_df.Age)
-    print('-------------------TEST------------------------')
-    
+        
     # 用得到的预测结果填补原缺失数据
     df.loc[ (df.Age.isnull()), 'Age' ] = predictedAges 
     
@@ -53,7 +50,10 @@ def set_Cabin_type(df):
 
 data_train, rfr = set_missing_ages(data_train)
 data_train = set_Cabin_type(data_train)
+print('-------------------TEST------------------------')
 print(data_train.Cabin)
+print('-------------------TEST------------------------')
+
 
 dummies_Cabin = pd.get_dummies(data_train['Cabin'], prefix='Cabin')
 
@@ -77,7 +77,7 @@ df['Fare_scaled'] = scaler.fit_transform(Fare_2, fare_scale_param)
 
 
 train_df = df.filter(regex='Survived|Age_.*|SibSp|Parch|Fare_.*|Cabin_.*|Embarked_.*|Sex_.*|Pclass_.*')
-print(train_df)
+# print(train_df)
 train_np = train_df.values
 
 print(train_np)
