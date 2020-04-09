@@ -40,6 +40,8 @@ cols = corrmat.nlargest(k, 'SalePrice')['SalePrice'].index
 cols = np.delete(cols.values, 4)
 cols = np.delete(cols, 4)
 cols = np.delete(cols, 6)
+cols = np.append(cols, ['MSZoning', 'LotConfig', 'LandSlope', 'BldgType', 'HouseStyle', 'RoofStyle', 'RoofMatl',
+'Foundation', 'BsmtQual', 'Heating', 'HeatingQC', 'CentralAir', 'GarageQual', 'SaleType', 'SaleCondition'], axis =0)
 print (cols)
 #scatterplot
 # sns.set()
@@ -64,6 +66,8 @@ data_train = data_train[cols].drop((missing_data[missing_data['Total'] > 1]).ind
 saleprice_scaled = StandardScaler().fit_transform(data_train['SalePrice'][:,np.newaxis])
 low_range = saleprice_scaled[saleprice_scaled[:,0].argsort()][:10]
 high_range= saleprice_scaled[saleprice_scaled[:,0].argsort()][-10:]
+
+df_train = pd.get_dummies(df_train)
 
 #convert categorical variable into dummy
 data_train.info()
@@ -112,7 +116,7 @@ rfr.fit(X, y)
 # 用得到的模型进行未知年龄结果预测
 predictedCars = rfr.predict(unknown_garacars[:, 4:])
 # 用得到的预测结果填补原缺失数据
-miss_data.loc[ (miss_data.GarageCars.isnull()), 'GarageCars' ] = predictedCars 
+df_test.loc[ (df_test.GarageCars.isnull()), 'GarageCars' ] = predictedCars 
 
 
 #########################################################################################
@@ -133,9 +137,14 @@ rfr.fit(X, y)
 # 用得到的模型进行未知年龄结果预测
 predictedCars = rfr.predict(unknown_garacars[:, 4:])
 # 用得到的预测结果填补原缺失数据
-miss_data.loc[ (miss_data.BsmtFinSF1.isnull()), 'BsmtFinSF1' ] = predictedCars
+df_test.loc[ (df_test.BsmtFinSF1.isnull()), 'BsmtFinSF1' ] = predictedCars
 
+df_test.drop(['GarageQual', 'GarageYrBlt', 'BsmtQual', 'MasVnrArea'], axis=1, inplace = True)
+df_test = pd.get_dummies(df_test)
 
+train_cols = df_train.index
+test_cols = df_test.index
+df_test.info()
 # data_test = miss_data
 
 predictions = clf.predict(miss_data)
