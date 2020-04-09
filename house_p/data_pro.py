@@ -54,7 +54,6 @@ percent = (data_train[cols].isnull().sum()/data_train[cols].isnull().count()).so
 missing_data = pd.concat([total, percent], axis=1, keys=['Total', 'Percent'])
 # print (missing_data.head(20))
 
-print ('------------------------------TEST-----------------------------------')
 
 data_train = data_train[cols].drop((missing_data[missing_data['Total'] > 1]).index,1)
 
@@ -67,7 +66,7 @@ saleprice_scaled = StandardScaler().fit_transform(data_train['SalePrice'][:,np.n
 low_range = saleprice_scaled[saleprice_scaled[:,0].argsort()][:10]
 high_range= saleprice_scaled[saleprice_scaled[:,0].argsort()][-10:]
 
-df_train = pd.get_dummies(df_train)
+data_train = pd.get_dummies(data_train)
 
 #convert categorical variable into dummy
 data_train.info()
@@ -86,7 +85,7 @@ clf.fit(X, y)
 print(clf)
 
 data_test = pd.read_csv("~/machine_l/database/House_Prices/test.csv")
-print(data_test)
+
 cols = np.delete(cols, 0)
 df_test = data_test[cols]
 df_test.info()
@@ -95,8 +94,6 @@ df_test.info()
 miss_data = pd.concat([df_test.GarageCars, df_test.BsmtFinSF1, \
                     df_test.OverallQual, df_test.GrLivArea, df_test['1stFlrSF'], df_test.FullBath,  
                     df_test.YearBuilt, df_test.YearRemodAdd, df_test.Fireplaces], axis=1)
-
-print (miss_data)
 
 # 乘客分成已知年龄和未知年龄两部分
 known_garacars = miss_data[miss_data.GarageCars.notnull()].values
@@ -141,15 +138,29 @@ df_test.loc[ (df_test.BsmtFinSF1.isnull()), 'BsmtFinSF1' ] = predictedCars
 
 df_test.drop(['GarageQual', 'GarageYrBlt', 'BsmtQual', 'MasVnrArea'], axis=1, inplace = True)
 df_test = pd.get_dummies(df_test)
+data_train.info()
+# df_test.info()
+train_cols = data_train.columns.values
 
-train_cols = df_train.index
-test_cols = df_test.index
+test_cols = df_test.columns.values
+print ('------------------------------TEST-----------------------------------')
+print(train_cols)
+print(test_cols)
+for i in range (data_train.shape[1]-1):
+    if test_cols[i] != train_cols[i+1]:
+        print ('------------------------------TEST-----------------------------------')
+        print(i, test_cols[i], train_cols[i+1])
+        df_test.insert(i-1, train_cols[i+1], 0) 
+        test_cols = df_test.columns.values
+        print(test_cols)
+
+
 df_test.info()
 # data_test = miss_data
 
-predictions = clf.predict(miss_data)
+predictions = clf.predict(df_test)
 result = pd.DataFrame({'Id':data_test.Id.values, 'SalePrice':predictions.astype(np.int32)})
-result.to_csv("~/machine_l/database/House_Prices/saleprice_predictions_0408.csv", index=False)
+result.to_csv("~/machine_l/database/House_Prices/saleprice_predictions_0409.csv", index=False)
 
 
 
