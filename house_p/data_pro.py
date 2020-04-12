@@ -4,12 +4,17 @@ from pandas import Series, DataFrame
 import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy.stats import norm
+from scipy.stats import skew
 from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import RandomForestRegressor
 from scipy import stats
 import warnings
 from sklearn import linear_model
+from sklearn.linear_model import Ridge, RidgeCV, ElasticNet, LassoCV, LassoLarsCV
+from sklearn.model_selection import cross_val_score
 warnings.filterwarnings('ignore')
+
+
 
 data_train = pd.read_csv("~/machine_l/database/House_Prices/train.csv")
 
@@ -40,6 +45,8 @@ cols = corrmat.nlargest(k, 'SalePrice')['SalePrice'].index
 cols = np.delete(cols.values, 4)
 cols = np.delete(cols, 4)
 cols = np.delete(cols, 6)
+
+
 cols = np.append(cols, ['MSZoning', 'LotConfig', 'LandSlope', 'BldgType', 'HouseStyle', 'RoofStyle', 'RoofMatl',
 'Foundation', 'BsmtQual', 'Heating', 'HeatingQC', 'CentralAir', 'GarageQual', 'SaleType', 'SaleCondition'], axis =0)
 print (cols)
@@ -49,6 +56,14 @@ print (cols)
 # sns.pairplot(data_train[cols], size = 2.5)
 # plt.show()
 
+numeric_feats = data_train.dtypes[data_train.dtypes != "object"].index
+
+skewed_feats = data_train[numeric_feats].apply(lambda x: skew(x.dropna())) #compute skewness
+skewed_feats = skewed_feats[skewed_feats > 0.75]
+skewed_feats = skewed_feats.index
+
+data_train[skewed_feats] = np.log1p(data_train[skewed_feats])
+
 total = data_train[cols].isnull().sum().sort_values(ascending=False)
 percent = (data_train[cols].isnull().sum()/data_train[cols].isnull().count()).sort_values(ascending=False)
 missing_data = pd.concat([total, percent], axis=1, keys=['Total', 'Percent'])
@@ -56,40 +71,34 @@ missing_data = pd.concat([total, percent], axis=1, keys=['Total', 'Percent'])
 
 
 data_train = data_train[cols].drop((missing_data[missing_data['Total'] > 1]).index,1)
-
+print(data_train)
 # data_train = data_train.drop(data_train.loc[data_train['Electrical'].isnull()].index)
 # data_train.isnull().sum().max() #just checking that there's no missing data missing...
 
 #standardizing data
 
-saleprice_scaled = StandardScaler().fit_transform(data_train['SalePrice'][:,np.newaxis])
-low_range = saleprice_scaled[saleprice_scaled[:,0].argsort()][:10]
-high_range= saleprice_scaled[saleprice_scaled[:,0].argsort()][-10:]
+# saleprice_scaled = StandardScaler().fit_transform(data_train['SalePrice'][:,np.newaxis])
+# low_range = saleprice_scaled[saleprice_scaled[:,0].argsort()][:10]
+# high_range= saleprice_scaled[saleprice_scaled[:,0].argsort()][-10:]
 
 data_train = pd.get_dummies(data_train)
 
-#convert categorical variable into dummy
-data_train.info()
+print(data_train)
 train_np = data_train.values
 y = train_np[:,0]
 X = train_np[:, 1:]
-print ('X shape is :', X.shape)
+print ('the training y', y)
 
-# X, y = make_regression(n_features=81, random_state=0)
-
-clf = linear_model.LogisticRegression(C=1.0, penalty = 'l2', tol = 1e-6)
-# clf = linear_model.LinearRegression().fit(X, y)
-# clf = ElasticNet(random_state=0)
-
-clf.fit(X, y)
-print(clf)
+model_lasso = LassoCV(alphas = [1, 0.1, 0.001, 0.0005]).fit(X, y)
+# clf = linear_model.LogisticRegression(C=1.0, penalty = 'l2', tol = 1e-6)
+# clf.fit(X, y)
+# print(clf)
 
 data_test = pd.read_csv("~/machine_l/database/House_Prices/test.csv")
 
 cols = np.delete(cols, 0)
 df_test = data_test[cols]
 df_test.info()
-
 
 miss_data = pd.concat([df_test.GarageCars, df_test.BsmtFinSF1, \
                     df_test.OverallQual, df_test.GrLivArea, df_test['1stFlrSF'], df_test.FullBath,  
@@ -137,8 +146,17 @@ predictedCars = rfr.predict(unknown_garacars[:, 4:])
 df_test.loc[ (df_test.BsmtFinSF1.isnull()), 'BsmtFinSF1' ] = predictedCars
 
 df_test.drop(['GarageQual', 'GarageYrBlt', 'BsmtQual', 'MasVnrArea'], axis=1, inplace = True)
+
+numeric_feats = df_test.dtypes[df_test.dtypes != "object"].index
+# df_test[numeric_feats] = StandardScaler().fit_transform(df_test[numeric_feats])
+
+skewed_feats = df_test[numeric_feats].apply(lambda x: skew(x.dropna())) #compute skewness
+skewed_feats = skewed_feats[skewed_feats > 0.75]
+skewed_feats = skewed_feats.index
+df_test[skewed_feats] = np.log1p(df_test[skewed_feats])
+
 df_test = pd.get_dummies(df_test)
-data_train.info()
+
 # df_test.info()
 train_cols = data_train.columns.values
 
@@ -158,9 +176,12 @@ for i in range (data_train.shape[1]-1):
 df_test.info()
 # data_test = miss_data
 
-predictions = clf.predict(df_test)
+print ('generating file')
+predictions = model_lasso.predict(df_test)
+# predictions.loc[predictions['SalePrice'] <= 0, 'SalePrice'] = 0
+predictions = np.expm1(predictions)
 result = pd.DataFrame({'Id':data_test.Id.values, 'SalePrice':predictions.astype(np.int32)})
-result.to_csv("~/machine_l/database/House_Prices/saleprice_predictions_0409.csv", index=False)
+result.to_csv("~/machine_l/database/House_Prices/saleprice_predictions_0411_1.csv", index=False)
 
 
 
