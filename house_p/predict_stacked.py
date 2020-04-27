@@ -32,6 +32,8 @@ test.drop("Id", axis = 1, inplace = True)
 print (train[(train['GrLivArea']>4000) & (train['SalePrice']<300000)].index)
 train = train.drop(train[(train['GrLivArea']>4000) & (train['SalePrice']<300000)].index)
 
+ntrain = train.shape[0]
+ntest = test.shape[0]
 train["SalePrice"] = np.log1p(train["SalePrice"])
 y_train = train.SalePrice.values
 all_data = pd.concat((train, test)).reset_index(drop=True)
@@ -72,7 +74,47 @@ all_data['Electrical'] = all_data['Electrical'].fillna(all_data['Electrical'].mo
 all_data['KitchenQual'] = all_data['KitchenQual'].fillna(all_data['KitchenQual'].mode()[0])
 all_data['SaleType'] = all_data['SaleType'].fillna(all_data['SaleType'].mode()[0])
 all_data['MSSubClass'] = all_data['MSSubClass'].fillna("None")
+all_data['TotalSF'] = all_data['TotalBsmtSF'] + all_data['1stFlrSF'] + all_data['2ndFlrSF']
 
+numeric_feats = all_data.dtypes[all_data.dtypes != "object"].index
+# Check the skew of all numerical features
+skewed_feats = all_data[numeric_feats].apply(lambda x: skew(x.dropna())).sort_values(ascending=False)
+print("\nSkew in numerical features: \n")
+skewness = pd.DataFrame({'Skew' :skewed_feats})
+skewness.head(10)
+
+skewness = skewness[abs(skewness) > 0.75]
+print("There are {} skewed numerical features to Box Cox transform".format(skewness.shape[0]))
+
+from scipy.special import boxcox1p
+skewed_features = skewness.index
+lam = 0.15
+for feat in skewed_features:
+    #all_data[feat] += 1
+    all_data[feat] = boxcox1p(all_data[feat], lam)
+
+all_data = pd.get_dummies(all_data)
+
+train = all_data[:ntrain]
+test = all_data[ntrain:]
+
+from sklearn.linear_model import ElasticNet, Lasso,  BayesianRidge, LassoLarsIC
+from sklearn.ensemble import RandomForestRegressor,  GradientBoostingRegressor
+from sklearn.kernel_ridge import KernelRidge
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import RobustScaler
+from sklearn.base import BaseEstimator, TransformerMixin, RegressorMixin, clone
+from sklearn.model_selection import KFold, cross_val_score, train_test_split
+from sklearn.metrics import mean_squared_error
+import xgboost as xgb
+import lightgbm as lgb
+
+n_folds = 5
+
+def rmsle_cv(model):
+    kf = KFold(n_folds, shuffle=True, random_state=42).get_n_splits(train.values)
+    rmse= np.sqrt(-cross_val_score(model, train.values, y_train, scoring="neg_mean_squared_error", cv = kf))
+    return(rmse)
 
 
 
